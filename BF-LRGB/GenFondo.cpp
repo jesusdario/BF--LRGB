@@ -717,8 +717,8 @@ void RealizarTestChangeDetectionNet(bool condeteccionsombras, bool coperacionclo
 	conoperacionclose = coperacionclose;
 
 	std::fstream arch;
-	arch.open("Y:\\logchangedetectionnet2014.txt", std::ios::out);
-	std::string directoriobase = "Y:\\dataset2014";
+	arch.open("d:\\logchangedetectionnet2014.txt", std::ios::out);
+	std::string directoriobase = "d:\\dataset2014";
 	std::string dataset = directoriobase + "\\dataset";
 	std::string resultados = directoriobase + "\\results";
 	std::vector<std::string> dirs;
@@ -727,14 +727,14 @@ void RealizarTestChangeDetectionNet(bool condeteccionsombras, bool coperacionclo
 	std::string exclusiones[] = {	
 		
 		"badWeather",
-		"baseline",
+		//"baseline",
 		"cameraJitter",
 		"dynamicBackground",
 		"intermittentObjectMotion",
 		"lowFramerate",
 		//nightVideos
 		"PTZ",
-		"shadow",
+		//"shadow",
 		"thermal",
 		"turbulence"
 	};
@@ -1371,33 +1371,33 @@ void RealizarTestSABS(bool consombras,bool coperacionclose, bool agimagenes) {
 	
 	if (consombras) {
 		arch << "Con Sombras" << std::endl;
-		arch.open("y:\\logSABSSombras.txt", std::ios::out);
+		arch.open("d:\\logSABSSombras.txt", std::ios::out);
 	}
 	else {
 		arch << "Sin Sombras" << std::endl;
-		arch.open("y:\\logSABSSinSombras.txt", std::ios::out);
+		arch.open("d:\\logSABSSinSombras.txt", std::ios::out);
 	}
 	DatosVideos info;
-	std::string resultados2 = "y:\\resultadossabs";
+	std::string resultados2 = "d:\\resultadossabs";
 	//resultados + "\\" + dirs[i] + "\\" + dirs2[o]
-	info.AgregarVideo("Basic", "Basic", -801, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png","y:\\resultadossabs\\out01");//Ok
-	info.AgregarVideo("Dynamic Background", "Basic", -801, 100, 380, 200, 560, "Y:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "y:\\resultadossabs\\out03");//Ok
-	info.AgregarVideo("Bootstrap", "Bootstrap", 0, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\Bootstrap\\*.png", "y:\\resultadossabs\\out11");//Ok
-	info.AgregarVideo("Darkening", "Darkening", -1, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "y:\\resultadossabs\\out05");//
-	info.AgregarVideo("Light Switch", "LightSwitch", -801, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\NoForegroundNight\\*.png", "y:\\resultadossabs\\out04");//
-	info.AgregarVideo("Noisy Night", "NoisyNight", -801, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\NoForegroundNightNoisy\\*.png", "y:\\resultadossabs\\out09");//Ok?
+	info.AgregarVideo("Basic", "Basic", -801, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png","d:\\resultadossabs\\out01");//Ok
+	info.AgregarVideo("Dynamic Background", "Basic", -801, 100, 380, 200, 560, "d:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "d:\\resultadossabs\\out03");//Ok
+	info.AgregarVideo("Bootstrap", "Bootstrap", 0, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\Bootstrap\\*.png", "d:\\resultadossabs\\out11");//Ok
+	info.AgregarVideo("Darkening", "Darkening", -1, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "d:\\resultadossabs\\out05");//
+	info.AgregarVideo("Light Switch", "LightSwitch", -801, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\NoForegroundNight\\*.png", "d:\\resultadossabs\\out04");//
+	info.AgregarVideo("Noisy Night", "NoisyNight", -801, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\NoForegroundNightNoisy\\*.png", "d:\\resultadossabs\\out09");//Ok?
 	//info.AgregarVideo("Shadow", "NoCamouflage", -1, -1, -1, -1, -1, "C:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", std::string());
-	info.AgregarVideo("Camouflage", "Camouflage", -1, 400, 600, 150, 500, "Y:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "y:\\resultadossabs\\out07");//Ok
-	info.AgregarVideo("NoCamouflage", "NoCamouflage", -1, 400, 600, 150, 500, "Y:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "y:\\resultadossabs\\out08");//Ok
-	info.AgregarVideo("MPEG4 40kbps", "MPEG4_40kbps", -801, -1, -1, -1, -1, "Y:\\videosprueba\\SABS\\Train\\MPEG4_40kbps\\*.png", "y:\\resultadossabs\\out10");
+	info.AgregarVideo("Camouflage", "Camouflage", -1, 400, 600, 150, 500, "d:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "d:\\resultadossabs\\out07");//Ok
+	info.AgregarVideo("NoCamouflage", "NoCamouflage", -1, 400, 600, 150, 500, "d:\\videosprueba\\SABS\\Train\\NoForegroundDay\\*.png", "d:\\resultadossabs\\out08");//Ok
+	info.AgregarVideo("MPEG4 40kbps", "MPEG4_40kbps", -801, -1, -1, -1, -1, "d:\\videosprueba\\SABS\\Train\\MPEG4_40kbps\\*.png", "d:\\resultadossabs\\out10");
 	AgregarParametros(arch);
 	agregarimagenes = true;
 	std::string directoriomuestra;
 	if (consombras)
-		directoriomuestra = "Y:\\videosprueba\\Resultados\\SABSSombras";
+		directoriomuestra = "d:\\videosprueba\\Resultados\\SABSSombras";
 	else
-		directoriomuestra = "Y:\\ResultadosSABSNormal";
-	info.Configurar("Y:\\videosprueba\\SABS\\Test\\%s\\*.png", "Y:\\videosprueba\\SABS\\GT\\GT*.png", false, "fg_", 6, 1,false,directoriomuestra,false,531);
+		directoriomuestra = "d:\\ResultadosSABSNormal";
+	info.Configurar("d:\\videosprueba\\SABS\\Test\\%s\\*.png", "d:\\videosprueba\\SABS\\GT\\GT*.png", false, "fg_", 6, 1,false,directoriomuestra,false,531);
 	info.ProcesarVideos(arch,ProcesarGTSABS); //el ground truth no corresponde!
 	arch.close();
 }
@@ -1450,7 +1450,7 @@ void RealizarTestWallflower(bool coperacionclose,bool conagregarimagenes) {
 
 	AgregarParametros(arch);
 	//agregarimagenes = true;
-	info.Configurar("d:\\videosprueba\\falldetectdataset\\wallflower\\%s\\b*.bmp", "d:\\videosprueba\\falldetectdataset\\wallflower\\%s\\hand_segmented_*.bmp", false, std::string(), 6, 1,false,"Y:\\ResultadosWallflower",true,-1);
+	info.Configurar("d:\\videosprueba\\falldetectdataset\\wallflower\\%s\\b*.bmp", "d:\\videosprueba\\falldetectdataset\\wallflower\\%s\\hand_segmented_*.bmp", false, std::string(), 6, 1,false,"d:\\ResultadosWallflower",true,-1);
 	info.ProcesarVideos(arch,ProcesarGTWallflower);
 	arch.close();
 }
