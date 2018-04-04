@@ -113,7 +113,8 @@ public:
 		}
 	}
 	cv::Mat Leer(std::string camino) {
-		HANDLE h = CreateFileA(camino.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+		return cv::imread(camino);
+		/*HANDLE h = CreateFileA(camino.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL|FILE_FLAG_SEQUENTIAL_SCAN, NULL);
 		if (h == INVALID_HANDLE_VALUE) {
 			return cv::imread(camino);
 		}
@@ -137,7 +138,7 @@ public:
 			cv::Mat res = cv::imread(camino);
 			CloseHandle(h);			
 			return res;
-		}
+		}*/
 	}
 	virtual cv::Mat GetNextImage(cv::Mat &groundtruth,int * fileindex, int *groundtruthindex, int *gtindexarchivo) {
 		if (position == filenames.size()) {
