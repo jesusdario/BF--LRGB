@@ -153,8 +153,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BuscadorObjetos21.h" />
-    <ClInclude Include="GeneradorFondo22.h" />
+    <ClInclude Include="ForegroundDetector.h" />
+    <ClInclude Include="BackgroundGenerator.h" />
     <ClInclude Include="Imagen4D.h" />
     <ClInclude Include="ListaImagenes.h" />
     <ClInclude Include="Preprocesador.h" />

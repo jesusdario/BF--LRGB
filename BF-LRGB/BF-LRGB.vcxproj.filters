@@ -21,12 +21,6 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GeneradorFondo22.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BuscadorObjetos21.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Preprocesador.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -40,6 +34,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForegroundDetector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BackgroundGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
