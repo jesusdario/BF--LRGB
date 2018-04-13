@@ -19,7 +19,7 @@ DEALINGS IN THE SOFTWARE.
 namespace DR {
 	namespace SoporteBase {
 		namespace Imagenes {
-			cv::Mat ObtenerMascaraMorph(int ancho) {
+			cv::Mat GetMorphologyMask(int ancho) {
 				if (ancho % 2 == 0) {
 					cv::Mat m = cv::Mat::zeros(ancho + 1, ancho + 1, CV_8UC1);//MODIFICACION. HACE LA MASCARA UN POCO MAS GRANDE PARA QUE ENTRE EL LADO DERECHO E INFERIOR DEL CIRCULO EN LA IMAGEN
 					cv::circle(m, cv::Point(ancho / 2, ancho / 2), ancho / 2, cv::Scalar(255), -1);
@@ -355,7 +355,7 @@ namespace DR {
 					
 			}
 
-			void QuitarPuntosAislados2(cv::Mat mat, cv::Mat& rest) {
+			void RemoveIsolatedPoints2(cv::Mat mat, cv::Mat& rest) {
 				cv::Mat res = mat.clone();//cv::Mat::zeros(mat.rows, mat.cols, CV_8UC1);
 				unsigned char * ptr[5];
 				unsigned char * ptrres[3];

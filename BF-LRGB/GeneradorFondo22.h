@@ -23,67 +23,45 @@ DEALINGS IN THE SOFTWARE.
 #include "Timer.h"
 #include <stack>
 #include <intrin.h>
-extern double valorProbabilidadTrue;
-extern double valorProbabilidadFalse;
-extern int valorEventosTrue;
-extern int valorEventosFalse;
-extern double valorgama;
-extern double valorpsi;
-extern double valorbeta;
-extern float limdetfondo;
-extern bool considerarcambiosubito;
-extern double thresholdcambiosubito;
-extern int numframespromedio;
+extern double thetaThresholdProbabilityTrue;
+extern double etaThresholdProbabilityFalse;
+extern int xiThresholdNumberOfTrueEvents;
+extern int rhoThresholdNumberOfFalseEvents;
+extern double gammaValue;
+extern double psivalue;
+extern double betavalue;
+extern float deltabackground;
+extern bool detectSuddenChangesInBackground;
+extern double thresholdSuddenChanges;
+extern int numberOfAveragedFrames;
 //cv::Mat QuitarPuntosAislados(cv::Mat mat);
 namespace DR {
 	namespace SoporteBase {
 		namespace Imagenes {
-			class GeneradorFondo22 {
+			class BackgroundGenerator {
 				
-				bool condatos;				
+				bool withData;				
 			public:
-				cv::Mat fondo;
-				cv::Mat fondocalc;
-				cv::Mat fondoalmacenado;
-				int numframe;
-				GeneradorFondo22() {
-					condatos = false;
-					numframe = 0;
+				cv::Mat background;
+				cv::Mat testingBackground;
+				cv::Mat verifiedBackground;
+				int framenumber;
+				BackgroundGenerator() {
+					withData = false;
+					framenumber = 0;
 				}
-				virtual bool ConDatos() {
-					return condatos;
+				virtual bool WithData() {
+					return withData;
 				}
-				cv::Mat almacenado;
-				cv::Mat contadoresfondo;
-				cv::Mat contadortotal;
-				cv::Mat threshdifback;
-				std::vector<cv::Mat> imagenesanteriores;
-				cv::Mat fondopruebacambiado;
-				virtual cv::Mat ObtenerFondoActual() {
-					return fondo;
+				cv::Mat isVerified;
+				cv::Mat eventCounter;
+				cv::Mat totalEventCounter;
+				std::vector<cv::Mat> previousImages;
+				cv::Mat testingBackgroundChanged;
+				virtual cv::Mat GetCurrentBackground() {
+					return background;
 				}
-				cv::Mat triplicar(cv::Mat a) {
-					std::vector<cv::Mat> vec;
-					vec.push_back(a);
-					vec.push_back(a);
-					vec.push_back(a);
-					cv::Mat res;
-					cv::merge(vec, res);
-					return res;
-				}
-				void MaxLim(cv::Mat mat, int limite) {
-					int limcol = mat.cols * 3;
-					for (int i = 0; i<mat.rows; i++) {
-						unsigned char *pt = mat.ptr<unsigned char>(i);
-						for (int o = 0; o<limcol; o++) {
-							if (*pt<limite) {
-								*pt = limite;
-							}
-							pt++;
-						}
-					}
-				}
-				inline bool doscondiciones(bool cond1, bool cond2, bool cond3) {
+				inline bool twoConditions(bool cond1, bool cond2, bool cond3) {
 					if (cond1) {
 						if (cond2) {
 							return true;
@@ -99,21 +77,16 @@ namespace DR {
 					}
 					return false;
 				}
-				inline int redondear(float f) {
-					int r = std::floor(f + 0.5f);
-					return r;
-				}
-				virtual cv::Mat EncontrarDiferencias(cv::Mat fondo, cv::Mat origen, bool agregarimagenes, ListaImagenes &lista,float limdetfondo) {
-					cv::Mat fondof, foregroundf;
-					cv::Mat brightness(origen.rows, origen.cols, CV_32FC3);
+				virtual cv::Mat FindDifferences(cv::Mat background, cv::Mat source, bool addImages, ListaImagenes &imageList,float deltaBackground) {
+					cv::Mat brightness(source.rows, source.cols, CV_32FC3);
 
 					const unsigned int valblue = 0.114f * 256 * 256 * 256;
 					const unsigned int valgreen = 0.587f * 256 * 256 * 256;
 					const unsigned int valred = 0.299f * 256 * 256 * 256;
-					for (int i = 0; i<origen.rows; i++) {
-						unsigned char *ptrfondo = fondo.ptr<unsigned char>(i);
+					for (int i = 0; i<source.rows; i++) {
+						unsigned char *ptrfondo = background.ptr<unsigned char>(i);
 						float *ptrbrightness = brightness.ptr<float>(i);
-						for (int o = 0; o<origen.cols; o++) {
+						for (int o = 0; o<source.cols; o++) {
 							unsigned int color = (((unsigned int)ptrfondo[0])*valblue +
 								((unsigned int)ptrfondo[1])*valgreen +
 								((unsigned int)ptrfondo[2])*valred) >> (8 * 3);
@@ -127,11 +100,11 @@ namespace DR {
 
 					cv::Mat k1 = brightness;
 					//cv::Mat k2=foregroundf-fondof;//<1.6 ms
-					cv::Mat k2(origen.rows, origen.cols, CV_32FC3);
-					int limptr = origen.cols * 3;
-					for (int i = 0; i<origen.rows; i++) {
-						unsigned char *ptrorigen = origen.ptr<unsigned char>(i);
-						unsigned char *ptrfondo = fondo.ptr<unsigned char>(i);
+					cv::Mat k2(source.rows, source.cols, CV_32FC3);
+					int limptr = source.cols * 3;
+					for (int i = 0; i<source.rows; i++) {
+						unsigned char *ptrorigen = source.ptr<unsigned char>(i);
+						unsigned char *ptrfondo = background.ptr<unsigned char>(i);
 						float *ptrk2 = k2.ptr<float>(i);
 						float *ptrfondof = k2.ptr<float>(i);
 						for (int o = 0; o<limptr; o++) {
@@ -143,244 +116,230 @@ namespace DR {
 					}
 
 					//cv::Mat constante=k2/(k1+0.1f);//<4 milisegundos
-					cv::Mat constante(fondo.rows, fondo.cols, CV_32FC3);
-
-					__m128 constmat;
-					constmat.m128_f32[0] = 0.1f;
-					constmat.m128_f32[1] = 0.1f;
-					constmat.m128_f32[2] = 0.1f;
-					constmat.m128_f32[3] = 0.1f;
-					for (int i = 0; i<constante.rows; i++) {
+					cv::Mat constant(background.rows, background.cols, CV_32FC3);
+					for (int i = 0; i<constant.rows; i++) {
 						float *ptrk2 = k2.ptr<float>(i);
 						float *ptrk1 = k1.ptr<float>(i);
-						float *ptrconstante = constante.ptr<float>(i);
+						float *ptrconstant = constant.ptr<float>(i);
 
 						int delta = limptr / 4;
 						int resto = limptr % 4;
 
 						for (int o = 0; o < delta; o++) {
-#if SININCREMENTODENOM
-							_mm_storeu_ps(ptrconstante, _mm_div_ps(_mm_loadu_ps(ptrk2), _mm_loadu_ps(ptrk1)));
-#else
-							_mm_storeu_ps(ptrconstante, _mm_div_ps(_mm_loadu_ps(ptrk2), _mm_add_ps(_mm_loadu_ps(ptrk1), constmat)));
-#endif
+							_mm_storeu_ps(ptrconstant, _mm_div_ps(_mm_loadu_ps(ptrk2), _mm_loadu_ps(ptrk1)));
 							ptrk1 += 4;
 							ptrk2 += 4;
-							ptrconstante += 4;
+							ptrconstant += 4;
 						}
 
 						for (int o = delta * 4; o<limptr; o++) {
-#if SININCREMENTODENOM
-							*ptrconstante = *ptrk2 / (*ptrk1);
-#else
-							*ptrconstante = *ptrk2 / (*ptrk1 + 0.1f);
-#endif
-							ptrconstante++;
+							*ptrconstant = *ptrk2 / (*ptrk1);
+							ptrconstant++;
 							ptrk1++;
 							ptrk2++;
 						}
 					}
-					if (agregarimagenes) {
-						lista.Agregar32F("Fondo_Constante Diferencia [ki]", constante, -1, 1);
+					if (addImages) {
+						imageList.Add32F("Fondo_Constante Diferencia [ki]", constant, -1, 1);
 					}
 					
-					cv::Mat cambios(constante.rows, constante.cols, CV_8UC1);
+					cv::Mat changes(constant.rows, constant.cols, CV_8UC1);
 
-
-					float ct1 = (float)(1 - limdetfondo) - 1;
-					float ct2 = (float)(1 + limdetfondo) - 1;
+					//The formula is 
+					//      k_i=deltaN/L+1
+					//constant is deltaN/L=k2(x,y)/k1(x,y), therefore, one must be subtracted from the limits. This reduces the subtraction computation step.
+					float ct1 = (float)(1 - deltaBackground) - 1;
+					float ct2 = (float)(1 + deltaBackground) - 1;
 
 
 					//<1 ms
-					for (int i = 0; i<constante.rows; i++) {
-						float *resconst = constante.ptr<float>(i);
-						unsigned char *rescambios = cambios.ptr<unsigned char>(i);
-						for (int o = 0; o<constante.cols; o++) {
-							*rescambios = ((resconst[0] >= ct1&&resconst[0] <= ct2)||
-								(resconst[1] >= ct1&&resconst[1] <= ct2)||
-								(resconst[2] >= ct1&&resconst[2] <= ct2)) ? 1 : 0;//255:0;
-							resconst += 3;
-							rescambios++;
+					for (int i = 0; i<constant.rows; i++) {
+						float *ptrconstant = constant.ptr<float>(i);
+						unsigned char *ptrchanges = changes.ptr<unsigned char>(i);
+						for (int o = 0; o<constant.cols; o++) {
+							*ptrchanges = ((ptrconstant[0] >= ct1&&ptrconstant[0] <= ct2)||
+								(ptrconstant[1] >= ct1&&ptrconstant[1] <= ct2)||
+								(ptrconstant[2] >= ct1&&ptrconstant[2] <= ct2)) ? 1 : 0;//255:0;
+							ptrconstant += 3;
+							ptrchanges++;
 						}
 					}
-					cv::Mat res;
-					if (numframe % 2 == 0) {
-						cv::medianBlur(cambios, cambios, 3);//<0.5ms
+					if (framenumber % 2 == 0) {
+						cv::medianBlur(changes, changes, 3);//<0.5ms
 					}
-					numframe++;
-					
-					return cambios;//(~cambios)/128;
+					framenumber++;
+					return changes;//(~cambios)/128;
 				}
 
-				int totaleventosreset;
-				virtual void AgregarImagen(cv::Mat imagen, cv::Mat mascaraforeground, bool agregarimagenes, ListaImagenes &lista) {
-					if (this->fondo.rows==0) {
-						this->fondo = imagen.clone();
-						fondocalc = imagen.clone();
-						fondoalmacenado = cv::Mat::zeros(imagen.rows, imagen.cols, CV_8UC3);
-						almacenado = cv::Mat::zeros(imagen.rows, imagen.cols, CV_8UC1);
-						contadoresfondo = cv::Mat::zeros(imagen.rows, imagen.cols, CV_32FC1);
-						contadortotal = cv::Mat::zeros(imagen.rows, imagen.cols, CV_32FC1);
-						fondopruebacambiado = cv::Mat::ones(imagen.rows, imagen.cols, CV_8UC1);
-						totaleventosreset = 0;
-						condatos = true;
+				int totalresetevents;
+				virtual void AddImage(cv::Mat image, bool addImages, ListaImagenes &imageList) {
+					if (this->background.rows==0) {
+						this->background = image.clone();
+						testingBackground = image.clone();
+						verifiedBackground = cv::Mat::zeros(image.rows, image.cols, CV_8UC3);
+						isVerified = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
+						eventCounter = cv::Mat::zeros(image.rows, image.cols, CV_32FC1);
+						totalEventCounter = cv::Mat::zeros(image.rows, image.cols, CV_32FC1);
+						testingBackgroundChanged = cv::Mat::ones(image.rows, image.cols, CV_8UC1);
+						totalresetevents = 0;
+						withData = true;
 						return;
 					}
-					condatos = true;
+					withData = true;
 
-					cv::Mat origen = imagen;
-					cv::Mat fondo = this->fondo;
-					bool conrecalc = false;
-				recalc:
-					cv::Mat thresholdDiferencia;
+					cv::Mat source = image;
+					cv::Mat background = this->background;
+					bool withRecomputing = false;
+				recompute:
+					cv::Mat differenceThreshold;
 					
-					thresholdDiferencia = EncontrarDiferencias(fondocalc, origen, agregarimagenes, lista,limdetfondo);
+					differenceThreshold = FindDifferences(testingBackground, source, addImages, imageList,deltabackground);
 					
-					float beta = valorbeta;
+					float beta = betavalue;
 					float deltabeta = (beta - 1) / beta;
-					for (int i = 0; i<contadortotal.rows; i++) {
-						float *ptrtotal = contadortotal.ptr<float>(i);
-						float *ptresfondo = contadoresfondo.ptr<float>(i);
-						unsigned char *ptrdif = thresholdDiferencia.ptr<unsigned char>(i);
-						for (int o = 0; o<contadortotal.cols; o++) {
-							if (*ptrtotal >= beta) {
-								*ptrtotal = beta;//*= deltabeta;
-								*ptresfondo *= deltabeta;
-								(*ptresfondo) += *ptrdif;
+					for (int i = 0; i<totalEventCounter.rows; i++) {
+						float *ptrTotal = totalEventCounter.ptr<float>(i);
+						float *ptrIsBackground = eventCounter.ptr<float>(i);
+						unsigned char *ptrDifference = differenceThreshold.ptr<unsigned char>(i);
+						for (int o = 0; o<totalEventCounter.cols; o++) {
+							if (*ptrTotal >= beta) {
+								*ptrTotal = beta;//*= deltabeta;
+								*ptrIsBackground *= deltabeta;
+								(*ptrIsBackground) += *ptrDifference;
 								//(*ptrtotal)++;
 							}
 							else {
-								(*ptresfondo) += *ptrdif;
-								(*ptrtotal)++;
+								(*ptrIsBackground) += *ptrDifference;
+								(*ptrTotal)++;
 							}
-							ptrtotal++;
-							ptresfondo++;
-							ptrdif++;
+							ptrTotal++;
+							ptrIsBackground++;
+							ptrDifference++;
 						}
 					}
-					float probabilidadtrue = valorProbabilidadTrue;
-					float probabilidadfalse = valorProbabilidadFalse;
-					int nroeventostrue = valorEventosTrue;
-					int nroeventosfalse = valorEventosFalse;
-					bool cambiosubito = considerarcambiosubito;
-					cv::Mat probab(contadortotal.rows, contadortotal.cols, CV_32FC1);
-					if (cambiosubito) {
-						int totaldifs = 0;
-						for (int i = 0; i<contadortotal.rows; i++) {
-							unsigned char *ptrdif = thresholdDiferencia.ptr<unsigned char>(i);
-							for (int o = 0; o<contadortotal.cols; o++) {
-								if (*ptrdif) totaldifs++;
+					float thetaProbabilityTrue = thetaThresholdProbabilityTrue;
+					float etaProbabilityFalse = etaThresholdProbabilityFalse;
+					int xiNumberOfTrueEvents = xiThresholdNumberOfTrueEvents;
+					int rhoNumberOfFalseEvents = rhoThresholdNumberOfFalseEvents;
+					bool detectSuddenChanges = detectSuddenChangesInBackground;
+					cv::Mat probab(totalEventCounter.rows, totalEventCounter.cols, CV_32FC1);
+					if (detectSuddenChanges) {
+						int differenceTotal = 0;
+						for (int i = 0; i<totalEventCounter.rows; i++) {
+							unsigned char *ptrdif = differenceThreshold.ptr<unsigned char>(i);
+							for (int o = 0; o<totalEventCounter.cols; o++) {
+								if (*ptrdif) differenceTotal++;
 								ptrdif++;
 							}
 						}
-						if (!conrecalc&&totaldifs<thresholdcambiosubito*probab.rows*probab.cols&&totaleventosreset>60) {
-							std::cout << "Cambio subito iluminacion:" << totaldifs << ":" << thresholdcambiosubito*probab.rows*probab.cols << "&" << std::endl;
-							fondocalc = imagen.clone();
-							fondoalmacenado = cv::Mat::zeros(imagen.rows, imagen.cols, CV_8UC3);
-							almacenado = cv::Mat::zeros(imagen.rows, imagen.cols, CV_8UC1);
-							contadoresfondo = cv::Mat::zeros(imagen.rows, imagen.cols, CV_32FC1);
-							contadortotal = cv::Mat::zeros(imagen.rows, imagen.cols, CV_32FC1);
-							fondopruebacambiado = cv::Mat::ones(imagen.rows, imagen.cols, CV_8UC1);
-							conrecalc = true;
-							totaleventosreset = 0;
-							imagenesanteriores.clear();
-							goto recalc;
+						if (!withRecomputing&&differenceTotal<thresholdSuddenChanges*probab.rows*probab.cols&&totalresetevents>60) {
+							std::cout << "Sudden Illumination Change:" << differenceTotal << ":" << thresholdSuddenChanges*probab.rows*probab.cols << "&" << std::endl;
+							testingBackground = image.clone();
+							verifiedBackground = cv::Mat::zeros(image.rows, image.cols, CV_8UC3);
+							isVerified = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
+							eventCounter = cv::Mat::zeros(image.rows, image.cols, CV_32FC1);
+							totalEventCounter = cv::Mat::zeros(image.rows, image.cols, CV_32FC1);
+							testingBackgroundChanged = cv::Mat::ones(image.rows, image.cols, CV_8UC1);
+							withRecomputing = true;
+							totalresetevents = 0;
+							previousImages.clear();
+							goto recompute;
 						}
 					}
-					float gamma = valorgama;
+					float gamma = gammaValue;
 					float compgamma = 1 - gamma;
-					float psi = valorpsi;
+					float psi = psivalue;
 					float comppsi = 1 - psi;
 					
-					while (imagenesanteriores.size() >= numframespromedio)
-						imagenesanteriores.erase(imagenesanteriores.begin());
-					imagenesanteriores.push_back(origen.clone());
+					while (previousImages.size() >= numberOfAveragedFrames)
+						previousImages.erase(previousImages.begin());
+					previousImages.push_back(source.clone());
 
-					for (int i = 0; i<contadortotal.rows; i++) {
-						float *ptrtotal = contadortotal.ptr<float>(i);
-						float *ptresfondo = contadoresfondo.ptr<float>(i);
-						float *ptrprobabilidad = probab.ptr<float>(i);
-						cv::Point3_<unsigned char> *ptrorigen = origen.ptr<cv::Point3_<unsigned char>>(i);
-						cv::Point3_<unsigned char> *ptrfondo = fondo.ptr<cv::Point3_<unsigned char>>(i);
-						cv::Point3_<unsigned char> *ptrfondoalmacenado = fondoalmacenado.ptr<cv::Point3_<unsigned char> >(i);
-						cv::Point3_<unsigned char> *ptrfondocalc = fondocalc.ptr<cv::Point3_<unsigned char> >(i);
-						unsigned char *ptralmacenado = almacenado.ptr<unsigned char>(i);
-						unsigned char *ptrdif = thresholdDiferencia.ptr<unsigned char>(i);
-						unsigned char *ptrfondopruebacambiado = fondopruebacambiado.ptr<unsigned char>(i);
-						for (int o = 0; o<contadortotal.cols; o++) {
-							float probabilidad = (*ptresfondo + 1) / (*ptrtotal + 2);
-							*ptrprobabilidad = probabilidad;
+					for (int i = 0; i<totalEventCounter.rows; i++) {
+						float *ptrTotal = totalEventCounter.ptr<float>(i);
+						float *ptrIsBackground = eventCounter.ptr<float>(i);
+						float *ptrProbability = probab.ptr<float>(i);
+						cv::Point3_<unsigned char> *ptrSource = source.ptr<cv::Point3_<unsigned char>>(i);
+						cv::Point3_<unsigned char> *ptrBackground = background.ptr<cv::Point3_<unsigned char>>(i);
+						cv::Point3_<unsigned char> *ptrVerifiedBackground = verifiedBackground.ptr<cv::Point3_<unsigned char> >(i);
+						cv::Point3_<unsigned char> *ptrTestingBackground = testingBackground.ptr<cv::Point3_<unsigned char> >(i);
+						unsigned char *ptrIsVerified = isVerified.ptr<unsigned char>(i);
+						unsigned char *ptrDifference = differenceThreshold.ptr<unsigned char>(i);
+						unsigned char *ptrTestingBackgroundChanged = testingBackgroundChanged.ptr<unsigned char>(i);
+						for (int o = 0; o<totalEventCounter.cols; o++) {
+							float probability = (*ptrIsBackground + 1) / (*ptrTotal + 2);
+							*ptrProbability = probability;
 
-							if ((*ptrtotal) >= nroeventostrue&&probabilidad >= probabilidadtrue) {
-								if (*ptrdif) {
-									(*ptrfondoalmacenado) = (*ptrfondocalc);
-									(*ptralmacenado) = 1;
-									*ptrfondopruebacambiado = false;
+							if ((*ptrTotal) >= xiNumberOfTrueEvents&&probability >= thetaProbabilityTrue) {
+								if (*ptrDifference) {
+									(*ptrVerifiedBackground) = (*ptrTestingBackground);
+									(*ptrIsVerified) = 1;
+									*ptrTestingBackgroundChanged = false;
 								}								
 							}
 							else {
-								if ((*ptrtotal) >= nroeventosfalse&&probabilidad<probabilidadfalse) {
+								if ((*ptrTotal) >= rhoNumberOfFalseEvents&&probability<etaProbabilityFalse) {
 									cv::Point3_<float> suma(0, 0, 0);
-									float totpeso = 0;
-									for (int j = 0; j < imagenesanteriores.size(); j++) {
-										cv::Point3_<unsigned char> pt = imagenesanteriores[j].at<cv::Point3_<unsigned char>>(i, o);
-										float peso = j + 1;
-										suma.x += peso*pt.x;
-										suma.y += peso*pt.y;
-										suma.z += peso*pt.z;
-										totpeso += peso;
+									float weighttotal = 0;
+									for (int j = 0; j < previousImages.size(); j++) {
+										cv::Point3_<unsigned char> pt = previousImages[j].at<cv::Point3_<unsigned char>>(i, o);
+										float weight = j + 1;
+										suma.x += weight*pt.x;
+										suma.y += weight*pt.y;
+										suma.z += weight*pt.z;
+										weighttotal += weight;
 									}
-									suma.x /= totpeso;
-									suma.y /= totpeso;
-									suma.z /= totpeso;
+									suma.x /= weighttotal;
+									suma.y /= weighttotal;
+									suma.z /= weighttotal;
 									cv::Point3_<unsigned char> r(suma.x, suma.y, suma.z);
-									(*ptrfondocalc) = r;
-									(*ptresfondo) = 0;
-									(*ptrtotal) = 0;
-									*ptrfondopruebacambiado = true;
+									(*ptrTestingBackground) = r;
+									(*ptrIsBackground) = 0;
+									(*ptrTotal) = 0;
+									*ptrTestingBackgroundChanged = true;
 								}
 							}
 
-							if ((*ptralmacenado)) {
-								(*ptrfondo) = (*ptrfondoalmacenado);
+							if ((*ptrIsVerified)) {
+								(*ptrBackground) = (*ptrVerifiedBackground);
 							}
 							else {
-								(*ptrfondo) = (*ptrfondocalc);
+								(*ptrBackground) = (*ptrTestingBackground);
 							}
-							if (*ptrdif) {
-								(*ptrfondocalc).x = cv::saturate_cast<unsigned char>((float)(*ptrfondocalc).x*gamma + (float)(*ptrorigen).x*compgamma);
-								(*ptrfondocalc).y = cv::saturate_cast<unsigned char>((float)(*ptrfondocalc).y*gamma + (float)(*ptrorigen).y*compgamma);
-								(*ptrfondocalc).z = cv::saturate_cast<unsigned char>((float)(*ptrfondocalc).z*gamma + (float)(*ptrorigen).z*compgamma);
-								if (!*ptrfondopruebacambiado&&*ptralmacenado) {
-									(*ptrfondoalmacenado).x = cv::saturate_cast<unsigned char>((float)(*ptrfondoalmacenado).x*psi + (float)(*ptrfondocalc).x*comppsi);
-									(*ptrfondoalmacenado).y = cv::saturate_cast<unsigned char>((float)(*ptrfondoalmacenado).y*psi + (float)(*ptrfondocalc).y*comppsi);
-									(*ptrfondoalmacenado).z = cv::saturate_cast<unsigned char>((float)(*ptrfondoalmacenado).z*psi + (float)(*ptrfondocalc).z*comppsi);
+							if (*ptrDifference) {
+								(*ptrTestingBackground).x = cv::saturate_cast<unsigned char>((float)(*ptrTestingBackground).x*gamma + (float)(*ptrSource).x*compgamma);
+								(*ptrTestingBackground).y = cv::saturate_cast<unsigned char>((float)(*ptrTestingBackground).y*gamma + (float)(*ptrSource).y*compgamma);
+								(*ptrTestingBackground).z = cv::saturate_cast<unsigned char>((float)(*ptrTestingBackground).z*gamma + (float)(*ptrSource).z*compgamma);
+								if (!*ptrTestingBackgroundChanged&&*ptrIsVerified) {
+									(*ptrVerifiedBackground).x = cv::saturate_cast<unsigned char>((float)(*ptrVerifiedBackground).x*psi + (float)(*ptrTestingBackground).x*comppsi);
+									(*ptrVerifiedBackground).y = cv::saturate_cast<unsigned char>((float)(*ptrVerifiedBackground).y*psi + (float)(*ptrTestingBackground).y*comppsi);
+									(*ptrVerifiedBackground).z = cv::saturate_cast<unsigned char>((float)(*ptrVerifiedBackground).z*psi + (float)(*ptrTestingBackground).z*comppsi);
 								}
 							}
 
-							ptrfondopruebacambiado++;
+							ptrTestingBackgroundChanged++;
 
-							ptrprobabilidad++;
-							ptrtotal++;
-							ptresfondo++;
-							ptrorigen++;
-							ptrfondo++;
-							ptrfondoalmacenado++;
-							ptrfondocalc++;
-							ptralmacenado++;
-							ptrdif++;
+							ptrProbability++;
+							ptrTotal++;
+							ptrIsBackground++;
+							ptrSource++;
+							ptrBackground++;
+							ptrVerifiedBackground++;
+							ptrTestingBackground++;
+							ptrIsVerified++;
+							ptrDifference++;
 						}
 					}
-					if (agregarimagenes) {
-						lista.Agregar("Fondo_Probabilidad Et=1 [P]", probab);
-						lista.Agregar("Fondo_Fondo Verificado [S]", fondoalmacenado);
-						lista.Agregar("Fondo_Fondo de Prueba [C]", fondocalc);
-						lista.Agregar("Fondo_Relacion entre fondo verificado y de prueba [D]", fondopruebacambiado * 255);
-						lista.Agregar("Fondo_Fondo Final [B]", fondo);
-						lista.Agregar("Fondo_Almacenado [A]", almacenado * 255);
-						lista.Agregar("Fondo_Evento Ct-It [E]", thresholdDiferencia * 255);
+					if (addImages) {
+						imageList.Add("Background_Probability Et=1 [P]", probab);
+						imageList.Add("Background_Verified Background [S]", verifiedBackground);
+						imageList.Add("Background_Testing Background [C]", testingBackground);
+						imageList.Add("Background_Relation between verified background and testing background [D]", testingBackgroundChanged * 255);
+						imageList.Add("Background_Final Background [B]", background);
+						imageList.Add("Background_IsVerified [A]", isVerified * 255);
+						imageList.Add("Background_Event [E]", differenceThreshold * 255);
 					}
-					totaleventosreset++;
+					totalresetevents++;
 					
 
 				}

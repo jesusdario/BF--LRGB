@@ -27,33 +27,33 @@ DEALINGS IN THE SOFTWARE.
 //#define GeneradorFondo22 GeneradorFondo23
 
 bool consuavizado = true;
-double valorProbabilidadTrue = 0.9;
-double valorProbabilidadFalse = 0.3;
-int valorEventosTrue = 25;
-int valorEventosFalse = 25;
+double thetaThresholdProbabilityTrue = 0.9;
+double etaThresholdProbabilityFalse = 0.3;
+int xiThresholdNumberOfTrueEvents = 25;
+int rhoThresholdNumberOfFalseEvents = 25;
 
-double valorgama = 0.9;
-double valorpsi = 0.9;
-double valorbeta = 1000;
+double gammaValue = 0.9;
+double psivalue = 0.9;
+double betavalue = 1000;
 
-double valorInterCoef = 0.25;
-double valorDistancia = 0.8;
-double valorProyec = 1.0;
+double chiIntercoefficientDistance = 0.25;
+double zetaValue = 0.8;
+double tauSqrt3Value = 1.0;
 bool deteccionsombras = false;
-bool conoperacionclose = false;
+bool withoperationclose = false;
 
-float limdetfondo = 0.05;
+float deltabackground = 0.05;
 float limdetforeground = 0.09;
 
 bool agregarimagenes = true;
-bool quitarartefactosilum = true;
+bool removeIlluminationArtifacts = true;
 
 /*
 int trackingvelestimada = 10;
 int trackingveltotal = 12;*/
-bool considerarcambiosubito = true;
-double thresholdcambiosubito = 0.10;
-int numframespromedio = 25;
+bool detectSuddenChangesInBackground = true;
+double thresholdSuddenChanges = 0.10;
+int numberOfAveragedFrames = 25;
 bool connormalizacionLRGB = false;
 
 
@@ -290,7 +290,7 @@ public:
 	int deltagt;
 	std::string salida;
 
-	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocesador *p, DR::SoporteBase::Imagenes::BuscadorObjetos21 *bb, DR::SoporteBase::Imagenes::GeneradorFondo22 * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ListaImagenes &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
+	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocesador *p, DR::SoporteBase::Imagenes::ForegroundDetector *bb, DR::SoporteBase::Imagenes::BackgroundGenerator * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ListaImagenes &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
 		VideoSourceDirectory &d = *cl.info;
 		cv::Mat gt, image;
 		InfoMat info = cl.Obtener();
@@ -321,14 +321,14 @@ public:
 		
 		Timer t;
 		t.Start();
-		gf->AgregarImagen(img, foreground, agregarimagenes, lista);
-		bb->EncontrarBlobs(img, gf, agregarimagenes, lista);
+		gf->AddImage(img, agregarimagenes, lista);
+		bb->FindForeground(img, gf, agregarimagenes, lista);
 		t.Stop();
 		double time = t.GetTime();
 		if (nframetotal % 100 == 0) {
 			std::cout << time << "\r";
 		}
-		if (bb->ObtenerForeground().rows==0) {
+		if (bb->GetForeground().rows==0) {
 			if (escribirresultados) {
 				cv::imwrite(salida + "\\" + prefijo + ObtenerNumero(index, numceros) + ".png", cv::Mat::zeros(image.rows, image.cols, CV_8UC1));
 			}
@@ -338,8 +338,8 @@ public:
 			cv::imshow(lista.ObtenerDescripcion(i), lista.ObtenerImagen(i));
 		}
 		
-		output = bb->ObtenerForeground();
-		background = gf->ObtenerFondoActual();
+		output = bb->GetForeground();
+		background = gf->GetCurrentBackground();
 		if (guardarimagengt&&gt.rows != 0) {
 			cv::imwrite(salidamuestra + "\\" + descripcion + "(entrada)" + ObtenerNumero(index, numceros) + ".png", imgentrada);
 			for (int i = 0; i < lista.ObtenerNumImagenes(); i++) {
@@ -347,7 +347,7 @@ public:
 			}
 			if (gt.rows!=0)
 				cv::imwrite(salidamuestra + "\\" + descripcion + "(groundtruth)"+ObtenerNumero(index, numceros) + ".png", gt);
-			cv::Mat imarch = bb->ObtenerForeground() * 255;
+			cv::Mat imarch = bb->GetForeground() * 255;
 			cv::imwrite(salidamuestra+"\\"+descripcion + ObtenerNumero(index, numceros) + ".png", imarch);
 		}
 		if (nframetotal == numframeguardar) {
@@ -357,7 +357,7 @@ public:
 			}
 			if (gt.rows != 0)
 				cv::imwrite(salidamuestra + "\\" + descripcion + "(groundtruth)" + ObtenerNumero(index, numceros) + ".png", gt);
-			cv::Mat imarch = bb->ObtenerForeground() * 255;
+			cv::Mat imarch = bb->GetForeground() * 255;
 			cv::imwrite(salidamuestra+"\\"+descripcion + ObtenerNumero(index, numceros) + ".png", imarch);
 		}
 		lista.Limpiar();
@@ -508,8 +508,8 @@ public:
 			ZeroMemory(tn, sizeof(tn));
 			ZeroMemory(fn, sizeof(fn));
 			DR::SoporteBase::Imagenes::Preprocesador *p = new Preprocesador();
-			DR::SoporteBase::Imagenes::BuscadorObjetos21 *bb = new DR::SoporteBase::Imagenes::BuscadorObjetos21();
-			DR::SoporteBase::Imagenes::GeneradorFondo22 * gf = new DR::SoporteBase::Imagenes::GeneradorFondo22();
+			DR::SoporteBase::Imagenes::ForegroundDetector *bb = new DR::SoporteBase::Imagenes::ForegroundDetector();
+			DR::SoporteBase::Imagenes::BackgroundGenerator * gf = new DR::SoporteBase::Imagenes::BackgroundGenerator();
 			int nframes = 0;
 			if (utilizarvideostraining) {
 				Preprocesador *p2= new Preprocesador();
@@ -583,23 +583,23 @@ void AgregarParametros(std::fstream &arch) {
 	arch << "Con suavizado\t" <<consuavizado<< std::endl;
 	arch << "Con normalización LRGB\t" << connormalizacionLRGB << std::endl;
 	arch << "Parámetros Algoritmo Fondo" << std::endl;
-	arch << "Threshold Coef. Fondo\t" << limdetfondo << std::endl;
-	arch << "Beta\t" << valorbeta << std::endl;
-	arch << "Probabilidad True\t" << valorProbabilidadTrue << std::endl;
-	arch << "Probabilidad False\t" << valorProbabilidadFalse << std::endl;
-	arch << "Num Eventos True\t" << valorEventosTrue << std::endl;
-	arch << "Num Eventos False\t" << valorEventosFalse << std::endl;
-	arch << "Num Imágenes Promedio\t" << numframespromedio << std::endl;
-	arch << "Gama\t" << valorgama << std::endl;
-	arch << "Fi\t" << valorpsi << std::endl;
+	arch << "Threshold Coef. Fondo\t" << deltabackground << std::endl;
+	arch << "Beta\t" << betavalue << std::endl;
+	arch << "Probabilidad True\t" << thetaThresholdProbabilityTrue << std::endl;
+	arch << "Probabilidad False\t" << etaThresholdProbabilityFalse << std::endl;
+	arch << "Num Eventos True\t" << xiThresholdNumberOfTrueEvents << std::endl;
+	arch << "Num Eventos False\t" << rhoThresholdNumberOfFalseEvents << std::endl;
+	arch << "Num Imágenes Promedio\t" << numberOfAveragedFrames << std::endl;
+	arch << "Gama\t" << gammaValue << std::endl;
+	arch << "Fi\t" << psivalue << std::endl;
 	arch << "Parámetros Algoritmo Detección Objetos" << std::endl;
 	arch << "Threshold Coef. Foreground\t" << limdetforeground << std::endl;
-	arch << "Dist. coef. escala\t" << valorInterCoef << std::endl;
-	arch << "Distancia\t" << valorDistancia << std::endl;
-	arch << "Proyeccion\t" << valorProyec << std::endl;
+	arch << "Dist. coef. escala\t" << chiIntercoefficientDistance << std::endl;
+	arch << "Distancia\t" << zetaValue << std::endl;
+	arch << "Proyeccion\t" << tauSqrt3Value << std::endl;
 	arch << "Con Deteccion Sombras\t" << deteccionsombras << std::endl;
-	arch << "Con Operación Close\t" << conoperacionclose << std::endl;
-	arch << "Threshold Cambio súbito\t" << thresholdcambiosubito << std::endl;
+	arch << "Con Operación Close\t" << withoperationclose << std::endl;
+	arch << "Threshold Cambio súbito\t" << thresholdSuddenChanges << std::endl;
 	
 }
 bool iniciacon(const char *cadena, const char *subcadena) {
@@ -684,37 +684,37 @@ void RealizarTestChangeDetectionNet(bool condeteccionsombras, bool coperacionclo
 	*/
 
 	consuavizado = false;
-	valorProbabilidadTrue = 0.95;//0.95 OK
-	valorProbabilidadFalse = 0.3;//0.3 OK
-	valorEventosTrue = 50;
-	valorEventosFalse = 10;
+	thetaThresholdProbabilityTrue = 0.95;//0.95 OK
+	etaThresholdProbabilityFalse = 0.3;//0.3 OK
+	xiThresholdNumberOfTrueEvents = 50;
+	rhoThresholdNumberOfFalseEvents = 10;
 
-	valorgama = 0.75;//0.7;
-	valorpsi = 0.9;
-	valorbeta = 100;
+	gammaValue = 0.75;//0.7;
+	psivalue = 0.9;
+	betavalue = 100;
 
-	valorInterCoef = 0.35;//0.75;
-	valorDistancia = 0.8;
-	valorProyec = 1.0;
+	chiIntercoefficientDistance = 0.35;//0.75;
+	zetaValue = 0.8;
+	tauSqrt3Value = 1.0;
 	deteccionsombras = false;
-	conoperacionclose = false;
+	withoperationclose = false;
 
-	limdetfondo = 0.05;
+	deltabackground = 0.05;
 	limdetforeground = 0.09;
 
 	agregarimagenes = false;
-	quitarartefactosilum = true;
+	removeIlluminationArtifacts = true;
 
-	considerarcambiosubito = true;
-	thresholdcambiosubito = 0.10;
-	numframespromedio = 6;
+	detectSuddenChangesInBackground = true;
+	thresholdSuddenChanges = 0.10;
+	numberOfAveragedFrames = 6;
 
 	connormalizacionLRGB = true;
 
 
 	agregarimagenes = iniagregarimagenes;//false;
 	deteccionsombras = condeteccionsombras;
-	conoperacionclose = coperacionclose;
+	withoperationclose = coperacionclose;
 
 	std::fstream arch;
 	arch.open("d:\\logchangedetectionnet2014.txt", std::ios::out);
@@ -779,31 +779,31 @@ void TestVariacionWallflower() {
 	for (int parametro = 0; parametro <= 14; parametro++) {
 		if (parametro == 1) continue;
 		if (parametro == 10) continue;
-		valorProbabilidadTrue = 0.9;//0.9
-		valorProbabilidadFalse = 0.45;//0.3
-		valorEventosTrue = 9;
-		valorEventosFalse = 4;
+		thetaThresholdProbabilityTrue = 0.9;//0.9
+		etaThresholdProbabilityFalse = 0.45;//0.3
+		xiThresholdNumberOfTrueEvents = 9;
+		rhoThresholdNumberOfFalseEvents = 4;
 
-		valorgama = 0.7;//0.8
-		valorpsi = 0.9;//0.8
-		valorbeta = 25;//50;//1000
+		gammaValue = 0.7;//0.8
+		psivalue = 0.9;//0.8
+		betavalue = 25;//50;//1000
 
-		valorInterCoef = 0.25;//0.65
-		valorDistancia = 0.8;
-		valorProyec = 0.9;//1.0;
+		chiIntercoefficientDistance = 0.25;//0.65
+		zetaValue = 0.8;
+		tauSqrt3Value = 0.9;//1.0;
 		deteccionsombras = false;
-		conoperacionclose = coperacionclose;
-		quitarartefactosilum = true;
+		withoperationclose = coperacionclose;
+		removeIlluminationArtifacts = true;
 
-		limdetfondo = 0.04;//0.05;
+		deltabackground = 0.04;//0.05;
 		limdetforeground = 0.09;
 
 		agregarimagenes = false;
 
-		considerarcambiosubito = true;
-		thresholdcambiosubito = 0.10;
+		detectSuddenChangesInBackground = true;
+		thresholdSuddenChanges = 0.10;
 
-		numframespromedio = 30;//25;
+		numberOfAveragedFrames = 30;//25;
 
 		if (parametro==0)
 			AgregarParametros(arch);
@@ -873,7 +873,7 @@ void TestVariacionWallflower() {
 			ini = 0.12;
 			fin = 0.211;
 			inc = 0.01;
-			quitarartefactosilum = false;
+			removeIlluminationArtifacts = false;
 			break;
 		case 11://thresholdcambiosubito
 			arch << "Variando Threshold Cambio S�bito" << std::endl;
@@ -910,49 +910,49 @@ void TestVariacionWallflower() {
 		for (double v = ini; v <= fin; v += inc) {
 			switch (parametro) {
 			case 0:
-				valorbeta = v;
+				betavalue = v;
 				break;
 			case 1:
-				valorEventosFalse = valorEventosTrue = v;
+				rhoThresholdNumberOfFalseEvents = xiThresholdNumberOfTrueEvents = v;
 				break;
 			case 2:
-				valorProbabilidadTrue = v;
+				thetaThresholdProbabilityTrue = v;
 				break;
 			case 3:
-				valorProbabilidadFalse = v;
+				etaThresholdProbabilityFalse = v;
 				break;
 			case 4:
-				valorgama = v;
+				gammaValue = v;
 				break;
 			case 5:
-				valorpsi = v;
+				psivalue = v;
 				break;
 			case 6:
-				valorInterCoef = v;
+				chiIntercoefficientDistance = v;
 				break;
 			case 7:
-				valorDistancia = v;
+				zetaValue = v;
 				break;
 			case 8:
-				valorProyec = v;
+				tauSqrt3Value = v;
 				break;
 			case 9:
-				limdetfondo = v;
+				deltabackground = v;
 				break;
 			case 10:
 				limdetforeground = v;
 				break;
 			case 11:
-				thresholdcambiosubito = v;
+				thresholdSuddenChanges = v;
 				break;
 			case 12:
-				numframespromedio = v;
+				numberOfAveragedFrames = v;
 				break;
 			case 13:
-				valorEventosTrue = v;
+				xiThresholdNumberOfTrueEvents = v;
 				break;
 			case 14:
-				valorEventosFalse = v;
+				rhoThresholdNumberOfFalseEvents = v;
 				break;
 			}
 			arch << "VALOR VARIABLE:" << v<<std::endl;
@@ -1085,30 +1085,30 @@ void TestVariacionSABS() {
 		thresholdcambiosubito = 0.10;
 		numframespromedio = 4;
 		*/
-		valorProbabilidadTrue = 0.95;//0.9
-		valorProbabilidadFalse = 0.1;//0.3
-		valorEventosTrue = 50;
-		valorEventosFalse = 10;
+		thetaThresholdProbabilityTrue = 0.95;//0.9
+		etaThresholdProbabilityFalse = 0.1;//0.3
+		xiThresholdNumberOfTrueEvents = 50;
+		rhoThresholdNumberOfFalseEvents = 10;
 
-		valorgama = 0.7;//0.8
-		valorpsi = 0.9;//0.8
-		valorbeta = 100;//1000
+		gammaValue = 0.7;//0.8
+		psivalue = 0.9;//0.8
+		betavalue = 100;//1000
 
-		valorInterCoef = 0.75;//0.65
-		valorDistancia = 0.8;
-		valorProyec = 1.0;
+		chiIntercoefficientDistance = 0.75;//0.65
+		zetaValue = 0.8;
+		tauSqrt3Value = 1.0;
 		deteccionsombras = false;
-		conoperacionclose = false;
-		quitarartefactosilum = true;
+		withoperationclose = false;
+		removeIlluminationArtifacts = true;
 
-		limdetfondo = 0.04;//0.05;
+		deltabackground = 0.04;//0.05;
 		limdetforeground = 0.09;
 
 		agregarimagenes = false;
 
-		considerarcambiosubito = true;
-		thresholdcambiosubito = 0.10;
-		numframespromedio = 4;
+		detectSuddenChangesInBackground = true;
+		thresholdSuddenChanges = 0.10;
+		numberOfAveragedFrames = 4;
 		if (parametro == 0)
 			AgregarParametros(arch);
 		switch (parametro) {
@@ -1177,7 +1177,7 @@ void TestVariacionSABS() {
 			ini = 0.12;
 			fin = 0.211;
 			inc = 0.01;
-			quitarartefactosilum = false;
+			removeIlluminationArtifacts = false;
 			break;
 		case 11://thresholdcambiosubito
 			arch << "Variando Threshold Cambio S�bito" << std::endl;
@@ -1210,49 +1210,49 @@ void TestVariacionSABS() {
 		for (double v = ini; v <= fin; v += inc) {
 			switch (parametro) {
 			case 0:
-				valorbeta = v;
+				betavalue = v;
 				break;
 			case 1:
-				valorEventosFalse = valorEventosTrue = v;
+				rhoThresholdNumberOfFalseEvents = xiThresholdNumberOfTrueEvents = v;
 				break;
 			case 2:
-				valorProbabilidadTrue = v;
+				thetaThresholdProbabilityTrue = v;
 				break;
 			case 3:
-				valorProbabilidadFalse = v;
+				etaThresholdProbabilityFalse = v;
 				break;
 			case 4:
-				valorgama = v;
+				gammaValue = v;
 				break;
 			case 5:
-				valorpsi = v;
+				psivalue = v;
 				break;
 			case 6:
-				valorInterCoef = v;
+				chiIntercoefficientDistance = v;
 				break;
 			case 7:
-				valorDistancia = v;
+				zetaValue = v;
 				break;
 			case 8:
-				valorProyec = v;
+				tauSqrt3Value = v;
 				break;
 			case 9:
-				limdetfondo = v;
+				deltabackground = v;
 				break;
 			case 10:
 				limdetforeground = v;
 				break;
 			case 11:
-				thresholdcambiosubito = v;
+				thresholdSuddenChanges = v;
 				break;
 			case 12:
-				numframespromedio = v;
+				numberOfAveragedFrames = v;
 				break;
 			case 13:
-				valorEventosTrue = v;
+				xiThresholdNumberOfTrueEvents = v;
 				break;
 			case 14:
-				valorEventosFalse = v;
+				rhoThresholdNumberOfFalseEvents = v;
 				break;
 			}
 			arch << "VALOR VARIABLE:" << v << std::endl;
@@ -1307,34 +1307,34 @@ void RealizarTestSABS(bool consombras,bool coperacionclose, bool agimagenes) {
 
 	consuavizado = true;//ANTES ERA CON SUAVIZADO
 
-	valorProbabilidadTrue = 0.95;//0.9
-	valorProbabilidadFalse = 0.1;//0.3
-	valorEventosTrue = 50;//10;
-	valorEventosFalse = 10;
+	thetaThresholdProbabilityTrue = 0.95;//0.9
+	etaThresholdProbabilityFalse = 0.1;//0.3
+	xiThresholdNumberOfTrueEvents = 50;//10;
+	rhoThresholdNumberOfFalseEvents = 10;
 
-	valorgama = 0.7;//0.8
-	valorpsi = 0.9;//0.8
-	valorbeta = 100;//1000
+	gammaValue = 0.7;//0.8
+	psivalue = 0.9;//0.8
+	betavalue = 100;//1000
 
-	valorInterCoef = 0.75;//0.65
-	valorDistancia = 0.8;
-	valorProyec = 1.0;
+	chiIntercoefficientDistance = 0.75;//0.65
+	zetaValue = 0.8;
+	tauSqrt3Value = 1.0;
 	deteccionsombras = false;
-	conoperacionclose = false;
-	quitarartefactosilum = true;
+	withoperationclose = false;
+	removeIlluminationArtifacts = true;
 
-	limdetfondo = 0.04;//0.05;
+	deltabackground = 0.04;//0.05;
 	limdetforeground = 0.09;
 
 	agregarimagenes = true;
 
-	considerarcambiosubito = true;
-	thresholdcambiosubito = 0.10;
-	numframespromedio = 4;
+	detectSuddenChangesInBackground = true;
+	thresholdSuddenChanges = 0.10;
+	numberOfAveragedFrames = 4;
 
 	connormalizacionLRGB = false;
 	deteccionsombras = consombras;
-	conoperacionclose = coperacionclose;
+	withoperationclose = coperacionclose;
 
 	/*otros valores
 	valorProbabilidadTrue = 0.95;//0.9
@@ -1405,7 +1405,7 @@ void RealizarTestWallflower(bool coperacionclose,bool conagregarimagenes) {
 	std::fstream arch;
 	arch.open("d:\\logwallflower.txt", std::ios::out);
 	deteccionsombras = false;
-	conoperacionclose = coperacionclose;
+	withoperationclose = coperacionclose;
 	DatosVideos info;
 	info.AgregarVideo("Moved Object", "MovedObject", 0, -1, -1, -1, -1, "","");
 	info.AgregarVideo("Time Of Day", "TimeOfDay", 0, -1, -1, -1, -1, "", "");
@@ -1422,31 +1422,31 @@ void RealizarTestWallflower(bool coperacionclose,bool conagregarimagenes) {
 	valorgama = 0.8;
 	valorpsi = 0.8;*/
 
-	valorProbabilidadTrue = 0.9;//0.9
-	valorProbabilidadFalse = 0.45;//0.3
-	valorEventosTrue = 9;
-	valorEventosFalse = 4;
+	thetaThresholdProbabilityTrue = 0.9;//0.9
+	etaThresholdProbabilityFalse = 0.45;//0.3
+	xiThresholdNumberOfTrueEvents = 9;
+	rhoThresholdNumberOfFalseEvents = 4;
 
-	valorgama = 0.7;//0.8
-	valorpsi = 0.9;//0.8
-	valorbeta = 25;//50;//1000
+	gammaValue = 0.7;//0.8
+	psivalue = 0.9;//0.8
+	betavalue = 25;//50;//1000
 
-	valorInterCoef = 0.25;//0.65
-	valorDistancia = 0.8;
-	valorProyec = 0.9;//1.0;
+	chiIntercoefficientDistance = 0.25;//0.65
+	zetaValue = 0.8;
+	tauSqrt3Value = 0.9;//1.0;
 	deteccionsombras = false;
-	conoperacionclose = coperacionclose;
-	quitarartefactosilum = true;
+	withoperationclose = coperacionclose;
+	removeIlluminationArtifacts = true;
 
-	limdetfondo = 0.04;//0.05;
+	deltabackground = 0.04;//0.05;
 	limdetforeground = 0.09;
 
 	agregarimagenes = conagregarimagenes;// true;
 
-	considerarcambiosubito = true;
-	thresholdcambiosubito = 0.10;
+	detectSuddenChangesInBackground = true;
+	thresholdSuddenChanges = 0.10;
 
-	numframespromedio = 30;//25;
+	numberOfAveragedFrames = 30;//25;
 
 	AgregarParametros(arch);
 	//agregarimagenes = true;

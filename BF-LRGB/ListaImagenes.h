@@ -126,7 +126,7 @@ public:
 		imagenes.push_back(img);
 	}
 	*/
-	void Agregar32F(std::string descripcion,cv::Mat mat,float valmin,float valmax) {
+	void Add32F(std::string descripcion,cv::Mat mat,float valmin,float valmax) {
 		InfoImagen img;
 		img.descripcion=descripcion;
 		cv::Mat conv;
@@ -161,7 +161,7 @@ public:
 		img.temporal=temporal;
 		imagenes.push_back(img);
 	}
-	void Agregar(std::string descripcion, cv::Mat imagen) {
+	void Add(std::string descripcion, cv::Mat imagen) {
 		Agregar(descripcion,imagen,false);
 	}
 	/*void Agregar(std::string descripcion,cv::Mat imagen) {
