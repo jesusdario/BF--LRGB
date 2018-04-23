@@ -16,13 +16,13 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABI
 CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
-#include "Preprocesador.h"
+#include "Preprocessor.h"
 #include "BackgroundGenerator.h"
 #include "ForegroundDetector.h"//Res. actuales
 //#include "BuscadorObjetos22.h"
 //#define BuscadorObjetos21 BuscadorObjetos22
 
-#include "Imagen4D.h"
+#include "LRGBImage.h"
 //#include "GeneradorFondo23.h"
 //#define GeneradorFondo22 GeneradorFondo23
 
@@ -1454,7 +1454,7 @@ void RealizarTestWallflower(bool coperacionclose,bool conagregarimagenes) {
 	info.ProcesarVideos(arch,ProcesarGTWallflower);
 	arch.close();
 }
-#include "Imagen4D.h"
+#include "LRGBImage.h"
 cv::Mat Escalar(cv::Mat mat) {
 	double valmin, valmax;
 	cv::minMaxIdx(mat, &valmin, &valmax);

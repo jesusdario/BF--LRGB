@@ -155,9 +155,9 @@
   <ItemGroup>
     <ClInclude Include="ForegroundDetector.h" />
     <ClInclude Include="BackgroundGenerator.h" />
-    <ClInclude Include="Imagen4D.h" />
+    <ClInclude Include="LRGBImage.h" />
     <ClInclude Include="ListaImagenes.h" />
-    <ClInclude Include="Preprocesador.h" />
+    <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer.h" />
@@ -165,7 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GenFondo.cpp" />
-    <ClCompile Include="Imagen4D.cpp" />
+    <ClCompile Include="LRGBImage.cpp" />
     <ClCompile Include="ListaImagenes.cpp" />
     <ClCompile Include="OtrasFunciones.cpp" />
     <ClCompile Include="stdafx.cpp">

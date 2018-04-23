@@ -21,16 +21,10 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Preprocesador.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ListaImagenes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Imagen4D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoSource.h">
@@ -40,6 +34,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BackgroundGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Preprocessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LRGBImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -56,10 +56,10 @@
     <ClCompile Include="Timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Imagen4D.cpp">
+    <ClCompile Include="GenFondo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GenFondo.cpp">
+    <ClCompile Include="LRGBImage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
