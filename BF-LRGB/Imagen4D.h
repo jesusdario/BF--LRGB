@@ -20,10 +20,10 @@ DEALINGS IN THE SOFTWARE.
 namespace DR {
 namespace SoporteBase {
 namespace Imagenes {
-class Imagen4D {
+class LRGBImage {
 	cv::Mat lightness;
 	std::vector<cv::Mat> channels;
-	Imagen4D() {}
+	LRGBImage() {}
 public:
 	cv::Mat GetColorChannels() {
 		cv::Mat res;
@@ -53,8 +53,8 @@ public:
 	cv::Mat GetLightness() {
 		return lightness;
 	}
-	Imagen4D Clone() {
-		Imagen4D d;
+	LRGBImage Clone() {
+		LRGBImage d;
 		d.lightness=lightness.clone();
 		for (int i=0;i<channels.size();i++) {
 			d.channels.push_back(channels[i].clone());
@@ -157,32 +157,20 @@ public:
 			*numn = nn;
 	}
 	void ScaleColorPN(int index, float factorp, float factorn) {
-		//if (mask.size().height != 0) {
 		float *ptr = (float *)(channels[index].data);
 		const int pixels = channels[index].rows*channels[index].cols;
 		for (int i = 0; i < pixels; i++) {
 			*ptr = (*ptr) >= 0 ? (*ptr)*factorp : (*ptr)*factorn;
 			ptr++;
 		}
-		/*channels[index] = channels[index].mul(channels[index] >= 0, factorp) +
-			channels[index].mul(channels[index] < 0, factorn);*/
-			//channels[index] = (channels[index].mul(mask) + shift)*factor + channels[index].mul(~mask);
-		//}
-		//else {
-		//	channels[index] = (channels[index] + shift)*factor;
-		//}
 	}
 	void ScaleLightness(float factor,float center=0) {
 		if (center==0) {
 			lightness=lightness*factor;
 		} else {
-			//cv::MatExpr constant=cv::Mat::ones(lightness.rows,lightness.cols,lightness.type())*center;
 			lightness=(lightness-center)*factor+center;		
 		}
 	}
-	/*void ShiftLightness(float factor) {
-		lightness=lightness+cv::Mat::ones(lightness.rows,lightness.cols,lightness.type())*factor;		
-	}*/	
 	void Init(cv::Mat image, int datatype= CV_32F) {
 		std::vector<cv::Mat>& c2 = channels;
 		c2.clear();
@@ -201,7 +189,7 @@ public:
 		c2[1] = c2[1] - lightness;
 		c2[2] = c2[2] - lightness;
 	}
-	Imagen4D(cv::Mat image,int datatype=CV_32F) {
+	LRGBImage(cv::Mat image,int datatype=CV_32F) {
 		Init(image, datatype);
 		
 	}

@@ -22,20 +22,20 @@ namespace DR {
 		namespace Imagenes {
 
 			cv::Mat EscalarBrilloYColor(cv::Mat origen, float escalabrillo, float escalacolor) {
-				Imagen4D imagen(origen);
+				LRGBImage imagen(origen);
 				imagen.ScaleLightness(escalabrillo, 128.0f);
 				imagen.ScaleColor(escalacolor);
 				cv::Mat res = imagen.GetImage();
 				return res;
 			}
 			cv::Mat EscalarBrillo(cv::Mat origen, float escala) {
-				Imagen4D imagen(origen);
+				LRGBImage imagen(origen);
 				imagen.ScaleLightness(escala, 128.0f);
 				cv::Mat res = imagen.GetImage();
 				return res;
 			};
 			cv::Mat EscalarColor(cv::Mat origen, float escala) {
-				Imagen4D imagen(origen);
+				LRGBImage imagen(origen);
 				imagen.ScaleColor(escala);
 				cv::Mat res = imagen.GetImage();
 				return res;

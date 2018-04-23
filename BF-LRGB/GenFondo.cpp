@@ -17,8 +17,8 @@ CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFT
 DEALINGS IN THE SOFTWARE.
 */
 #include "Preprocesador.h"
-#include "GeneradorFondo22.h"
-#include "BuscadorObjetos21.h"//Res. actuales
+#include "BackgroundGenerator.h"
+#include "ForegroundDetector.h"//Res. actuales
 //#include "BuscadorObjetos22.h"
 //#define BuscadorObjetos21 BuscadorObjetos22
 
@@ -290,7 +290,7 @@ public:
 	int deltagt;
 	std::string salida;
 
-	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocesador *p, DR::SoporteBase::Imagenes::ForegroundDetector *bb, DR::SoporteBase::Imagenes::BackgroundGenerator * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ListaImagenes &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
+	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocessor *p, DR::SoporteBase::Imagenes::ForegroundDetector *bb, DR::SoporteBase::Imagenes::BackgroundGenerator * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ListaImagenes &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
 		VideoSourceDirectory &d = *cl.info;
 		cv::Mat gt, image;
 		InfoMat info = cl.Obtener();
@@ -507,12 +507,12 @@ public:
 			ZeroMemory(fp, sizeof(fp));
 			ZeroMemory(tn, sizeof(tn));
 			ZeroMemory(fn, sizeof(fn));
-			DR::SoporteBase::Imagenes::Preprocesador *p = new Preprocesador();
+			DR::SoporteBase::Imagenes::Preprocessor *p = new Preprocessor();
 			DR::SoporteBase::Imagenes::ForegroundDetector *bb = new DR::SoporteBase::Imagenes::ForegroundDetector();
 			DR::SoporteBase::Imagenes::BackgroundGenerator * gf = new DR::SoporteBase::Imagenes::BackgroundGenerator();
 			int nframes = 0;
 			if (utilizarvideostraining) {
-				Preprocesador *p2= new Preprocesador();
+				Preprocessor *p2= new Preprocessor();
 				VideoSourceDirectory d2(videos[o].mascaratraining, "c:\\ND.png", 0);
 				ColaSinc<InfoMat, VideoSourceDirectory *> cl2;
 				cl2.info = &d2;
