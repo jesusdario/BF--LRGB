@@ -41,14 +41,14 @@ namespace DR {
 					shiftlightness = 0;
 				}
 				cv::Mat Preprocesar(cv::Mat img, bool *salir) {
-					cv::Mat entrada = img;
-					cv::Mat salida = img.clone();
-					cv::Mat image = salida;
+					cv::Mat input = img;
+					cv::Mat output = img.clone();
+					cv::Mat image = output;
 					if (consuavizado) {
-						cv::GaussianBlur(entrada, image, cv::Size(3, 3), 1, 1);
+						cv::GaussianBlur(input, image, cv::Size(3, 3), 1, 1);
 					}
 					else {
-						entrada.copyTo(image);
+						input.copyTo(image);
 					}
 					if (salir != NULL) {
 						*salir = false;
@@ -104,7 +104,7 @@ namespace DR {
 							}
 							*/
 							initialized = true;							
-							std::cout << "Correcciones imagen: L:" << shiftlightness << std::endl;// << ";C1:" << colorscalevaluep[0] << ";C2:" << colorscalevaluep[1] << ";C2:" << colorscalevaluep[2] << ";N1:" << colorscalevaluen[0] << ";N2:" << colorscalevaluen[1] << ";N3:" << colorscalevaluen[2] << std::endl;
+							std::cout << "Corrections in the image: L:" << shiftlightness << std::endl;// << ";C1:" << colorscalevaluep[0] << ";C2:" << colorscalevaluep[1] << ";C2:" << colorscalevaluep[2] << ";N1:" << colorscalevaluen[0] << ";N2:" << colorscalevaluen[1] << ";N3:" << colorscalevaluen[2] << std::endl;
 						}
 						//the algorithm was initially formulated with color scales for positive and negative values. However this was removed in the final implementation (correctcolorscales=false)
 						if (initialized&&(colorblur||shiftlightness != 0 /*|| colorscalevaluep[0] != 1 || colorscalevaluep[1] != 1 || colorscalevaluep[2] != 1)*/)) {
@@ -140,7 +140,7 @@ namespace DR {
 					}
 					
 
-					return salida;
+					return output;
 				}
 			};
 		}
