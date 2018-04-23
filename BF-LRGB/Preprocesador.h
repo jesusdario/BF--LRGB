@@ -132,10 +132,10 @@ namespace DR {
 					int lim = image.cols * 3;
 
 					for (int i = 0; i < image.rows; i++) {
-						unsigned char *pfila = image.ptr<unsigned char>(i);
+						unsigned char *rowptr = image.ptr<unsigned char>(i);
 						for (int o = 0; o < lim; o++) {
-							if (*pfila < 8) *pfila = 8; 
-							pfila++;
+							if (*rowptr < 8) *rowptr = 8; 
+							rowptr++;
 						}
 					}
 					
