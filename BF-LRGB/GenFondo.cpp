@@ -65,7 +65,7 @@ int nummaxfondos = 3;
 #include "VideoSource.h"
 #include <fstream>
 #include <string>
-#include "ListaImagenes.h"
+#include "ImageList.h"
 using namespace DR::SoporteBase::Imagenes;
 
 
@@ -290,7 +290,7 @@ public:
 	int deltagt;
 	std::string salida;
 
-	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocessor *p, DR::SoporteBase::Imagenes::ForegroundDetector *bb, DR::SoporteBase::Imagenes::BackgroundGenerator * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ListaImagenes &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
+	bool AnalizarImagenes(ColaSinc<InfoMat, VideoSourceDirectory*> &cl, DR::SoporteBase::Imagenes::Preprocessor *p, DR::SoporteBase::Imagenes::ForegroundDetector *bb, DR::SoporteBase::Imagenes::BackgroundGenerator * gf, __int64 tp[], __int64 tn[], __int64 fp[], __int64 fn[], ImageList &lista, int *nframes, int nframetotal, FuncProc procgt,bool escribirresultados, std::string prefijo, int numceros,std::string descripcion="",std::string salidamuestra="", bool guardarimagengt=false, int numframeguardar=-1) {
 		VideoSourceDirectory &d = *cl.info;
 		cv::Mat gt, image;
 		InfoMat info = cl.Obtener();
@@ -334,16 +334,16 @@ public:
 			}
 			return false;
 		}
-		for (int i = 0; i < lista.ObtenerNumImagenes(); i++) {
-			cv::imshow(lista.ObtenerDescripcion(i), lista.ObtenerImagen(i));
+		for (int i = 0; i < lista.GetSize(); i++) {
+			cv::imshow(lista.GetDescription(i), lista.GetImage(i));
 		}
 		
 		output = bb->GetForeground();
 		background = gf->GetCurrentBackground();
 		if (guardarimagengt&&gt.rows != 0) {
 			cv::imwrite(salidamuestra + "\\" + descripcion + "(entrada)" + ObtenerNumero(index, numceros) + ".png", imgentrada);
-			for (int i = 0; i < lista.ObtenerNumImagenes(); i++) {
-				cv::imwrite(salidamuestra + "\\" + descripcion+"("+lista.ObtenerDescripcion(i)+ ")"+ObtenerNumero(index, numceros) + ".png", lista.ObtenerImagen(i));
+			for (int i = 0; i < lista.GetSize(); i++) {
+				cv::imwrite(salidamuestra + "\\" + descripcion+"("+lista.GetDescription(i)+ ")"+ObtenerNumero(index, numceros) + ".png", lista.GetImage(i));
 			}
 			if (gt.rows!=0)
 				cv::imwrite(salidamuestra + "\\" + descripcion + "(groundtruth)"+ObtenerNumero(index, numceros) + ".png", gt);
@@ -352,15 +352,15 @@ public:
 		}
 		if (nframetotal == numframeguardar) {
 			cv::imwrite(salidamuestra + "\\" + descripcion + "(entrada)" + ObtenerNumero(index, numceros) + ".png", imgentrada);
-			for (int i = 0; i < lista.ObtenerNumImagenes(); i++) {
-				cv::imwrite(salidamuestra + "\\" + descripcion + "(" + lista.ObtenerDescripcion(i) + ")" + ObtenerNumero(index, numceros) + ".png", lista.ObtenerImagen(i));
+			for (int i = 0; i < lista.GetSize(); i++) {
+				cv::imwrite(salidamuestra + "\\" + descripcion + "(" + lista.GetDescription(i) + ")" + ObtenerNumero(index, numceros) + ".png", lista.GetImage(i));
 			}
 			if (gt.rows != 0)
 				cv::imwrite(salidamuestra + "\\" + descripcion + "(groundtruth)" + ObtenerNumero(index, numceros) + ".png", gt);
 			cv::Mat imarch = bb->GetForeground() * 255;
 			cv::imwrite(salidamuestra+"\\"+descripcion + ObtenerNumero(index, numceros) + ".png", imarch);
 		}
-		lista.Limpiar();
+		lista.Clear();
 		output *= 255;
 		if (escribirresultados) {
 			cv::imwrite(salida + "\\" + prefijo + ObtenerNumero(index, numceros) + ".png", output);
@@ -489,7 +489,7 @@ public:
 
 		for (int o = 0; o < videos.size(); o++) {
 			std::cout << videos[o].descripcion << std::endl;
-			ListaImagenes lista;
+			ImageList lista;
 
 			std::string video = videos[o].video;
 			char buf1[10000];

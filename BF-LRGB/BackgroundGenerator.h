@@ -19,10 +19,11 @@ DEALINGS IN THE SOFTWARE.
 #define SININCREMENTODENOM 1
 #include "opencv2\opencv.hpp"
 #include "opencv2\opencv_modules.hpp"
-#include "ListaImagenes.h"
+#include "ImageList.h"
 #include "Timer.h"
 #include <stack>
 #include <intrin.h>
+//Threse variables are the parameters of the algorithm.
 extern double thetaThresholdProbabilityTrue;
 extern double etaThresholdProbabilityFalse;
 extern int xiThresholdNumberOfTrueEvents;
@@ -77,7 +78,7 @@ namespace DR {
 					}
 					return false;
 				}
-				virtual cv::Mat FindDifferences(cv::Mat background, cv::Mat source, bool addImages, ListaImagenes &imageList,float deltaBackground) {
+				virtual cv::Mat FindDifferences(cv::Mat background, cv::Mat source, bool addImages, ImageList &imageList,float deltaBackground) {
 					cv::Mat brightness(source.rows, source.cols, CV_32FC3);
 
 					const unsigned int valblue = 0.114f * 256 * 256 * 256;
@@ -172,7 +173,7 @@ namespace DR {
 				}
 
 				int totalresetevents;
-				virtual void AddImage(cv::Mat image, bool addImages, ListaImagenes &imageList) {
+				virtual void AddImage(cv::Mat image, bool addImages, ImageList &imageList) {
 					if (this->background.rows==0) {
 						this->background = image.clone();
 						testingBackground = image.clone();

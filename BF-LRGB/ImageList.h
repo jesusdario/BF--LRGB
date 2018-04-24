@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /*Copyright 2018 Jesus D. Romero
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -18,66 +18,66 @@ DEALINGS IN THE SOFTWARE.
 */
 #include <string>
 #include "opencv2\opencv.hpp"
-#include "ListaImagenes.h"
+#include "ImageList.h"
 namespace DR {
 	namespace SoporteBase {
 		namespace Imagenes {
 
 
-struct InfoImagen {
-	std::string descripcion;
-	cv::Mat imagen;
-	bool temporal;
-	bool mostrada;
-	InfoImagen() {
-		temporal=false;
-		mostrada=false;
+struct ImageInformation {
+	std::string description;
+	cv::Mat image;
+	bool temporary;
+	bool shown;
+	ImageInformation() {
+		temporary=false;
+		shown=false;
 	}
-	InfoImagen(const InfoImagen &c):descripcion(c.descripcion) {
-		this->imagen=c.imagen;
-		this->temporal=c.temporal;
-		this->mostrada=c.mostrada;
+	ImageInformation(const ImageInformation &c):description(c.description) {
+		this->image=c.image;
+		this->temporary=c.temporary;
+		this->shown=c.shown;
 	}
-	~InfoImagen() {
+	~ImageInformation() {
 		/*IImagen *img=imagen.Puntero();
 		imagen.Detach();
 		if (img!=NULL) {
 			delete img;
 		}*/
 	}
-	virtual const char *ObtenerDescripcion() {
-		return descripcion.c_str();
+	virtual const char *GetDescription() {
+		return description.c_str();
 	}
-	virtual cv::Mat ObtenerImagen() {
-		return imagen;
+	virtual cv::Mat GetImage() {
+		return image;
 	}
 };
-class ListaImagenes {	
-	std::vector<InfoImagen> imagenes;
+class ImageList {	
+	std::vector<ImageInformation> images;
 public:
-	ListaImagenes() {
-		imagenes.reserve(100);//el multithreading puede causar errores si es que el tama�o del vector cambia y se obtiene una referencia a una posicion invalida de la memoria
+	ImageList() {
+		images.reserve(100);//el multithreading puede causar errores si es que el tamaño del vector cambia y se obtiene una referencia a una posicion invalida de la memoria
 	}
-	virtual void Limpiar() {
-		imagenes.clear();
+	virtual void Clear() {
+		images.clear();
 	}
-	virtual int ObtenerNumImagenes() {
-		return (int)imagenes.size();
+	virtual int GetSize() {
+		return (int)images.size();
 	}
-	virtual cv::Mat ObtenerImagen(int posicion) {
-		return imagenes[posicion].imagen;
+	virtual cv::Mat GetImage(int posicion) {
+		return images[posicion].image;
 	}
-	virtual const char *ObtenerDescripcion(int posicion) {
-		return imagenes[posicion].descripcion.c_str();
+	virtual const char *GetDescription(int posicion) {
+		return images[posicion].description.c_str();
 	}
-	virtual cv::Mat ObtenerImagen(const char *descripcion) {
-		for (unsigned i=0;i<imagenes.size();i++) {
-			if (strncmp(imagenes[i].ObtenerDescripcion(),descripcion,1000)==0)
-				return imagenes[i].ObtenerImagen();
+	virtual cv::Mat GetImage(const char *descripcion) {
+		for (unsigned i=0;i<images.size();i++) {
+			if (strncmp(images[i].GetDescription(),descripcion,1000)==0)
+				return images[i].GetImage();
 		}
 		return cv::Mat();
 	}
-	cv::Mat normalizar(cv::Mat res,bool clonar) {
+	cv::Mat normalize(cv::Mat res,bool clonar) {
 		cv::Mat resultado;
 		if (res.channels()!=3) {
 			std::vector<cv::Mat> vc;
@@ -127,17 +127,17 @@ public:
 	}
 	*/
 	void Add32F(std::string descripcion,cv::Mat mat,float valmin,float valmax) {
-		InfoImagen img;
-		img.descripcion=descripcion;
+		ImageInformation img;
+		img.description=descripcion;
 		cv::Mat conv;
 		if (valmin==valmax)
 			valmax++;
 		float centro=(valmax+valmin)/2;
 		float rango=(valmax-valmin);
 		cv::Mat res=(mat-valmin)/rango;
-		res=normalizar(res,false);
-		img.imagen=res;
-		imagenes.push_back(img);
+		res=normalize(res,false);
+		img.image=res;
+		images.push_back(img);
 	}
 	/*void Agregar(std::string descripcion,cv::Mat imagen,bool temporal) {
 		InfoImagen img;
@@ -150,48 +150,48 @@ public:
 		img.temporal=temporal;
 		imagenes.push_back(img);
 	}*/
-	void Agregar(std::string descripcion,cv::Mat imagen,bool temporal) {
-		InfoImagen img;
-		img.descripcion=descripcion;
+	void Add(std::string descripcion,cv::Mat imagen,bool temporal) {
+		ImageInformation img;
+		img.description=descripcion;
 		if (imagen.type()!=CV_8UC3) {
-			img.imagen=normalizar(imagen,true);
+			img.image=normalize(imagen,true);
 		} else {
-			img.imagen=imagen;
+			img.image=imagen;
 		}
-		img.temporal=temporal;
-		imagenes.push_back(img);
+		img.temporary=temporal;
+		images.push_back(img);
 	}
 	void Add(std::string descripcion, cv::Mat imagen) {
-		Agregar(descripcion,imagen,false);
+		Add(descripcion,imagen,false);
 	}
 	/*void Agregar(std::string descripcion,cv::Mat imagen) {
 		Agregar(descripcion,imagen,false);
 	}*/
-	void mostrar(std::string title,int mode) {
-		for (unsigned int i=0;i<imagenes.size();i++) {
-			std::string desc=title+" - "+imagenes[i].descripcion;
+	void show(std::string title,int mode) {
+		for (unsigned int i=0;i<images.size();i++) {
+			std::string desc=title+" - "+images[i].description;
 			cv::namedWindow(desc,mode);
-			cv::imshow(desc,imagenes[i].imagen);
-			imagenes[i].mostrada=true;
+			cv::imshow(desc,images[i].image);
+			images[i].shown=true;
 		}
 	}
-	void guardar(std::string title) {
-		for (unsigned int i=0;i<imagenes.size();i++) {
-			std::string desc=title+" - "+imagenes[i].descripcion+".png";
-			cv::Mat mt=imagenes[i].imagen;
-			if (imagenes[i].imagen.type()==CV_32FC3) {
-				imagenes[i].imagen.convertTo(mt,CV_8UC3,128,128);
+	void store(std::string title) {
+		for (unsigned int i=0;i<images.size();i++) {
+			std::string desc=title+" - "+images[i].description+".png";
+			cv::Mat mt=images[i].image;
+			if (images[i].image.type()==CV_32FC3) {
+				images[i].image.convertTo(mt,CV_8UC3,128,128);
 			}
-			if (imagenes[i].imagen.type()==CV_32FC1) {
-				imagenes[i].imagen.convertTo(mt,CV_8UC1,128,128);
+			if (images[i].image.type()==CV_32FC1) {
+				images[i].image.convertTo(mt,CV_8UC1,128,128);
 			}
 			cv::imwrite(desc,mt);
 		}
 	}
-	virtual ~ListaImagenes() {
-		for (unsigned int i=0;i<imagenes.size();i++) {
-			if (imagenes[i].mostrada&&imagenes[i].temporal) {
-				cv::destroyWindow(imagenes[i].descripcion);
+	virtual ~ImageList() {
+		for (unsigned int i=0;i<images.size();i++) {
+			if (images[i].shown&&images[i].temporary) {
+				cv::destroyWindow(images[i].description);
 			}
 		}
 	}

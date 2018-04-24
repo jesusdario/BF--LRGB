@@ -156,7 +156,7 @@
     <ClInclude Include="ForegroundDetector.h" />
     <ClInclude Include="BackgroundGenerator.h" />
     <ClInclude Include="LRGBImage.h" />
-    <ClInclude Include="ListaImagenes.h" />
+    <ClInclude Include="ImageList.h" />
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -166,7 +166,7 @@
   <ItemGroup>
     <ClCompile Include="GenFondo.cpp" />
     <ClCompile Include="LRGBImage.cpp" />
-    <ClCompile Include="ListaImagenes.cpp" />
+    <ClCompile Include="ImageList.cpp" />
     <ClCompile Include="OtrasFunciones.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

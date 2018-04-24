@@ -18,6 +18,7 @@ DEALINGS IN THE SOFTWARE.
 */
 #include <vector>
 #include <intrin.h>
+//These variables are the parameters of the algorithm
 extern double chiIntercoefficientDistance;
 extern double zetaValue;
 extern double tauSqrt3Value;
@@ -79,7 +80,7 @@ public:
 		return Lightness;
 	}
 	cv::Mat morphologymask;
-	virtual void FindForeground(cv::Mat currentImage,BackgroundGenerator *generador,bool addImages,ListaImagenes &imageList) {
+	virtual void FindForeground(cv::Mat currentImage,BackgroundGenerator *generador,bool addImages,ImageList &imageList) {
 		if (!generador->WithData()) return;
 		bool RemoveShadows= removeIlluminationArtifacts;
 					
